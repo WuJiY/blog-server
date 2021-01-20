@@ -1,5 +1,5 @@
 const { connectDb } = require('./index')
-const { Id } = require('../db')
+const { IdCount } = require('../db')
 
 /**
  * 手动增加一些数据
@@ -18,9 +18,4 @@ async function create(model, data) {
   process.exit()
 }
 
-create(Id, [
-  { _id: 'users', value: 0 },
-  { _id: 'blogs', value: 0 },
-  { _id: 'messages', value: 0 },
-  { _id: 'friends', value: 0 },
-])
+create(IdCount, [{ _id: 'users' }, { _id: 'blogs' }, { _id: 'messages' }, { _id: 'friends' }])

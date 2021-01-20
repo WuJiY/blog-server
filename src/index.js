@@ -11,13 +11,11 @@ connectDb()
 const app = new Koa()
 
 app.use(Helmet())
-app.use(Logger())
-app.use(
-  Cors({
-    credentials: true,
-  })
-)
-app.use(BodyParser())
+if (process.env.NODE_ENV === 'development') {
+  app.use(Logger())
+}
+app.use(Cors({ credentials: true }))
+app.use(BodyParser({ enableTypes: ['json'] }))
 
 app.use(router.routes())
 app.use(router.allowedMethods())

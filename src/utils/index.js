@@ -1,10 +1,13 @@
-const { readFileSync } = require('fs')
+const { readFileSync, createWriteStream } = require('fs')
 const { join } = require('path')
 const mongoose = require('mongoose')
 const { genSalt, hash } = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
 const auth = require('../../assets/auth.json')
+
+const out = createWriteStream(join(__dirname, '../../server.log'), { flags: 'a' })
+const logger = new console.Console(process.stdout, out)
 
 /**
  * 连接数据库
@@ -18,9 +21,9 @@ async function connectDb() {
       useUnifiedTopology: true,
       autoIndex: false,
     })
-    console.log('Successfully connected to mongoDb')
+    logger.log('Successfully connected to mongoDb')
   } catch (e) {
-    console.error(e)
+    logger.error(e)
     process.exit(1)
   }
 }
@@ -37,6 +40,16 @@ async function hashPassword(pass) {
 }
 
 /**
+ * 验证密码
+ * @param {string} pass 用户输入的密码
+ * @param {string} salt 用户文档保存的盐
+ */
+async function verifyPassword(pass, salt) {
+  const hashed = await hash(pass, salt)
+  return hashed
+}
+
+/**
  * 签发jwt
  * @param {object} payload 负载对象
  */
@@ -46,8 +59,30 @@ function signToken(payload) {
   return token
 }
 
+const constans = {
+  MAX_AGE: 28800000 + 300000,
+}
+
+const config = {
+  userTokenCookie: {
+    maxAge: constans.MAX_AGE,
+    // 默认为false但设置了Keygrip时会变为true
+    signed: false,
+  },
+  userIdCookie: {
+    maxAge: constans.MAX_AGE,
+    httpOnly: false,
+    signed: true,
+  },
+}
+
 module.exports = {
   connectDb,
   hashPassword,
+  verifyPassword,
   signToken,
+  constans,
+  config,
+  auth,
+  logger,
 }

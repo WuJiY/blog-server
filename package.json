@@ -6,13 +6,14 @@
   "license": "MIT",
   "author": "ApassEr <wongzero@foxmail.com>",
   "scripts": {
-    "start": "nodemon --delay 5"
+    "dev": "cross-env NODE_ENV=development nodemon --delay 5"
   },
   "dependencies": {
     "@koa/cors": "^3.1.0",
     "@koa/router": "^10.0.0",
     "bcrypt": "^5.0.0",
     "jsonwebtoken": "^8.5.1",
+    "keygrip": "^1.1.0",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
     "koa-helmet": "^6.0.0",
@@ -21,6 +22,7 @@
     "mongoose": "^5.11.11"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "eslint": "^7.2.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
