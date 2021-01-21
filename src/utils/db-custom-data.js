@@ -2,7 +2,7 @@ const { connectDb } = require('./index')
 const { IdCount } = require('../db')
 
 /**
- * 手动增加一些数据
+ * 手动创建文档
  * @param model mongoose.Model
  * @param {object | [object]} data
  */

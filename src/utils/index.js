@@ -21,7 +21,7 @@ const config = {
   userTokenCookie: {
     maxAge: constans.MAX_AGE,
   },
-  userIdAndExpCookie: {
+  userExpCookie: {
     maxAge: constans.MAX_AGE,
     httpOnly: false,
   },
@@ -80,12 +80,27 @@ function signToken(payload) {
   return token
 }
 
+/**
+ * 用于koa-jwt选项
+ * @param {object} ctx
+ */
+function getToken(ctx) {
+  const userToken = ctx.cookies.get('user_token')
+  if (!userToken) {
+    return null
+  }
+  return userToken
+}
+
 module.exports = {
+  constans,
+  config,
+  logger,
   connectDb,
   hashPassword,
   verifyPassword,
   signToken,
-  constans,
-  config,
-  logger,
+  getToken,
+  readFileSync,
+  join,
 }

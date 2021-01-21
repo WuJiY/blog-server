@@ -1,5 +1,3 @@
-const { readFileSync } = require('fs')
-const { join } = require('path')
 const Router = require('@koa/router')
 const Koajwt = require('koa-jwt')
 const { IdCount, User } = require('../db')
@@ -7,9 +5,26 @@ const {
   hashPassword,
   verifyPassword,
   signToken,
-  config: { userTokenCookie, userIdAndExpCookie },
+  getToken,
+  readFileSync,
+  join,
+  config: { userTokenCookie, userExpCookie },
   logger,
 } = require('../utils')
+
+/**
+ * @param {number} id
+ */
+// eslint-disable-next-line consistent-return
+async function updateUserActive(id) {
+  if (typeof id !== 'number') {
+    return logger.error(new Date(), new TypeError('id must be number'))
+  }
+  const user = await User.findById(id)
+  if (user) {
+    user.updateActive()
+  }
+}
 
 const router = new Router()
 
@@ -32,8 +47,7 @@ router.post('/register', async (ctx) => {
     }
     const token = signToken({ id: idCount.value })
     ctx.cookies.set('user_token', token, userTokenCookie)
-    ctx.cookies.set('user_id', String(idCount.value), userIdAndExpCookie)
-    ctx.cookies.set('user_exp', String(Date.now() + userIdAndExpCookie.maxAge), userIdAndExpCookie)
+    ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
     ctx.status = 200
     User.create({
       _id: idCount.value,
@@ -53,27 +67,17 @@ router.post('/register', async (ctx) => {
 router.get(
   '/login',
   Koajwt({
-    getToken(ctx) {
-      const userToken = ctx.cookies.get('user_token')
-      if (!userToken) {
-        return null
-      }
-      return userToken
-    },
+    getToken,
     secret: readFileSync(join(__dirname, '../../assets/public.pem')),
   }),
-  (ctx) => {
-    const { id } = ctx.state.user
+  async (ctx) => {
     try {
+      const { id } = ctx.state.user
       const token = signToken({ id })
       ctx.cookies.set('user_token', token, userTokenCookie)
-      ctx.cookies.set('user_id', String(id), userIdAndExpCookie)
-      ctx.cookies.set(
-        'user_exp',
-        String(Date.now() + userIdAndExpCookie.maxAge),
-        userIdAndExpCookie
-      )
+      ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
       ctx.status = 200
+      updateUserActive(id)
     } catch (e) {
       ctx.status = 500
       logger.error(new Date(), e)
@@ -101,10 +105,9 @@ router.post('/login', async (ctx) => {
     }
     const token = signToken({ id: user._id })
     ctx.cookies.set('user_token', token, userTokenCookie)
-    //                         virtual(id):string
-    ctx.cookies.set('user_id', user.id, userIdAndExpCookie)
-    ctx.cookies.set('user_exp', String(Date.now() + userIdAndExpCookie.maxAge), userIdAndExpCookie)
+    ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
     ctx.status = 200
+    updateUserActive(user._id)
   } catch (e) {
     ctx.status = 500
     logger.error(new Date(), e)
@@ -114,7 +117,6 @@ router.post('/login', async (ctx) => {
 router.get('/logout', (ctx) => {
   try {
     ctx.cookies.set('user_token', '', { maxAge: 0 })
-    ctx.cookies.set('user_id', '', { maxAge: 0 })
     ctx.cookies.set('user_exp', '', { maxAge: 0 })
     ctx.status = 200
   } catch (e) {
