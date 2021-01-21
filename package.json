@@ -13,7 +13,6 @@
     "@koa/router": "^10.0.0",
     "bcrypt": "^5.0.0",
     "jsonwebtoken": "^8.5.1",
-    "keygrip": "^1.1.0",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
     "koa-helmet": "^6.0.0",

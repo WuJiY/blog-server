@@ -3,11 +3,29 @@ const { join } = require('path')
 const mongoose = require('mongoose')
 const { genSalt, hash } = require('bcrypt')
 const jwt = require('jsonwebtoken')
-
 const auth = require('../../assets/auth.json')
 
-const out = createWriteStream(join(__dirname, '../../server.log'), { flags: 'a' })
-const logger = new console.Console(process.stdout, out)
+// eslint-disable-next-line operator-linebreak
+const errorlogout =
+  process.env.NODE_ENV === 'development'
+    ? process.stderr
+    : createWriteStream(join(__dirname, '../../server.log'), { flags: 'a' })
+const logger = new console.Console(process.stdout, errorlogout)
+
+const constans = {
+  //       UTC+8      7 days
+  MAX_AGE: 28800000 + 604800000,
+}
+
+const config = {
+  userTokenCookie: {
+    maxAge: constans.MAX_AGE,
+  },
+  userIdAndExpCookie: {
+    maxAge: constans.MAX_AGE,
+    httpOnly: false,
+  },
+}
 
 /**
  * 连接数据库
@@ -23,7 +41,7 @@ async function connectDb() {
     })
     logger.log('Successfully connected to mongoDb')
   } catch (e) {
-    logger.error(e)
+    logger.error(new Date(), e)
     process.exit(1)
   }
 }
@@ -55,25 +73,11 @@ async function verifyPassword(pass, salt) {
  */
 function signToken(payload) {
   const key = readFileSync(join(__dirname, '../../assets/private.pem'))
-  const token = jwt.sign(payload, key, { algorithm: 'RS256', expiresIn: 300 })
+  const token = jwt.sign(payload, key, {
+    algorithm: 'RS256',
+    expiresIn: constans.MAX_AGE - 28800000,
+  })
   return token
-}
-
-const constans = {
-  MAX_AGE: 28800000 + 300000,
-}
-
-const config = {
-  userTokenCookie: {
-    maxAge: constans.MAX_AGE,
-    // 默认为false但设置了Keygrip时会变为true
-    signed: false,
-  },
-  userIdCookie: {
-    maxAge: constans.MAX_AGE,
-    httpOnly: false,
-    signed: true,
-  },
 }
 
 module.exports = {
@@ -83,6 +87,5 @@ module.exports = {
   signToken,
   constans,
   config,
-  auth,
   logger,
 }
