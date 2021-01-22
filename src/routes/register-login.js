@@ -6,20 +6,16 @@ const {
   verifyPassword,
   signToken,
   getToken,
-  readFileSync,
-  join,
+  constans: { PUBLIC_KEY },
   config: { userTokenCookie, userExpCookie },
   logger,
 } = require('../utils')
 
 /**
+ * 更新用户最近活动时间
  * @param {number} id
  */
-// eslint-disable-next-line consistent-return
 async function updateUserActive(id) {
-  if (typeof id !== 'number') {
-    return logger.error(new Date(), new TypeError('id must be number'))
-  }
   const user = await User.findById(id)
   if (user) {
     user.updateActive()
@@ -30,7 +26,7 @@ const router = new Router()
 
 router.post('/register', async (ctx) => {
   const { mail, name, pass } = ctx.request.body
-  // todo:验证
+  // todo: 人机验证(captcha)
   if (!mail || !name || !pass) {
     ctx.status = 403
     return
@@ -49,7 +45,7 @@ router.post('/register', async (ctx) => {
     ctx.cookies.set('user_token', token, userTokenCookie)
     ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
     ctx.status = 200
-    User.create({
+    await User.create({
       _id: idCount.value,
       mail,
       name,
@@ -63,12 +59,12 @@ router.post('/register', async (ctx) => {
   }
 })
 
-// 验证,刷新token
+// token验证，续期，用于自动登录
 router.get(
   '/login',
   Koajwt({
     getToken,
-    secret: readFileSync(join(__dirname, '../../assets/public.pem')),
+    secret: PUBLIC_KEY,
   }),
   async (ctx) => {
     try {
@@ -87,7 +83,7 @@ router.get(
 
 router.post('/login', async (ctx) => {
   const { mail, pass } = ctx.request.body
-  // todo:验证
+  // todo: 人机验证(captcha)
   if (!mail || !pass) {
     ctx.status = 403
     return

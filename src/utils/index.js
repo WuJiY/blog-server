@@ -3,6 +3,7 @@ const { join } = require('path')
 const mongoose = require('mongoose')
 const { genSalt, hash } = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const chunk = require('lodash/chunk')
 const auth = require('../../assets/auth.json')
 
 // eslint-disable-next-line operator-linebreak
@@ -15,12 +16,11 @@ const logger = new console.Console(process.stdout, errorlogout)
 const constans = {
   //       UTC+8      7 days
   MAX_AGE: 28800000 + 604800000,
+  PUBLIC_KEY: readFileSync(join(__dirname, '../../assets/public.pem')),
 }
 
 const config = {
-  userTokenCookie: {
-    maxAge: constans.MAX_AGE,
-  },
+  userTokenCookie: { maxAge: constans.MAX_AGE },
   userExpCookie: {
     maxAge: constans.MAX_AGE,
     httpOnly: false,
@@ -92,6 +92,42 @@ function getToken(ctx) {
   return userToken
 }
 
+/**
+ * 处理排序查询
+ * @param {any[]} arr
+ * @param {string} key
+ * @param {string} order
+ */
+function handleSort(arr, key, order) {
+  let flag = -1
+  if (order === 'desc') {
+    flag = 1
+  }
+  arr.sort((a, b) => {
+    if (a[key] < b[key]) {
+      return flag
+    }
+    if (a[key] > b[key]) {
+      return -flag
+    }
+    return 0
+  })
+}
+
+/**
+ * 处理分页查询
+ * @param {any[]} arr
+ * @param {string} page
+ * @param {string} limit
+ */
+function handlePage(arr, page, limit = '10') {
+  const paged = chunk(arr, parseInt(limit, 10))
+  if (paged.length === 0) {
+    return []
+  }
+  return paged[parseInt(page, 10) - 1]
+}
+
 module.exports = {
   constans,
   config,
@@ -101,6 +137,6 @@ module.exports = {
   verifyPassword,
   signToken,
   getToken,
-  readFileSync,
-  join,
+  handleSort,
+  handlePage,
 }

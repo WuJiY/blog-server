@@ -6,9 +6,7 @@ module.exports = {
     node: true,
   },
   extends: ['airbnb-base'],
-  parserOptions: {
-    ecmaVersion: 12,
-  },
+  parserOptions: { ecmaVersion: 12 },
   rules: {
     semi: ['error', 'never'],
     'no-plusplus': ['error', { allowForLoopAfterthoughts: true }],
@@ -18,5 +16,6 @@ module.exports = {
       { arrays: 'always-multiline', objects: 'always-multiline', functions: 'never' },
     ],
     'no-underscore-dangle': ['error', { allow: ['_id'] }],
+    'object-curly-newline': ['error', { multiline: true }],
   },
 }

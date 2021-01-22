@@ -1,16 +1,20 @@
 const Router = require('@koa/router')
 const Koajwt = require('koa-jwt')
 const { User } = require('../db')
-// eslint-disable-next-line object-curly-newline
-const { logger, getToken, readFileSync, join } = require('../utils')
+const {
+  logger,
+  getToken,
+  constans: { PUBLIC_KEY },
+} = require('../utils')
 
 const router = new Router({ prefix: '/users' })
 
+// 自动登录后传用户数据
 router.get(
   '/current',
   Koajwt({
     getToken,
-    secret: readFileSync(join(__dirname, '../../assets/public.pem')),
+    secret: PUBLIC_KEY,
   }),
   async (ctx) => {
     try {
@@ -34,25 +38,5 @@ router.get(
     }
   }
 )
-
-router.get('/:id', async (ctx) => {
-  let { id } = ctx.params
-  try {
-    if (!/\d+/.test(id)) {
-      ctx.status = 400
-      return
-    }
-    id = parseInt(id, 10)
-    const user = await User.findById(id, ['name', 'avatar', 'lastActive'])
-    if (!user) {
-      ctx.status = 400
-      return
-    }
-    ctx.body = user
-  } catch (e) {
-    ctx.status = 500
-    logger.error(new Date(), e)
-  }
-})
 
 module.exports = router.routes()

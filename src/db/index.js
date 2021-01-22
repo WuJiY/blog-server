@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 
 const { Schema } = mongoose
 
+// 对应collection已用id计数表
 const IdCountSchema = new Schema({
   _id: String,
   value: { type: Number, default: 0 },
@@ -28,12 +29,35 @@ const UserSchema = new Schema({
   passModified: { type: Date, default: new Date() },
 })
 
+// 更新用户最近活动时间
 UserSchema.method('updateActive', function updateActive() {
   this.lastActive = new Date()
   this.save()
 })
 
+const MessageSchema = new Schema({
+  _id: Number,
+  user: { type: Number, ref: 'User' },
+  content: { type: String, required: true },
+  date: { type: Date, default: new Date() },
+  // 点赞数
+  thumbsUp: { type: Number, default: 0 },
+  // 回复数
+  replies: { type: Number, default: 0 },
+})
+
+MessageSchema.method('thumbsUpIncr', function thumbsUpIncr() {
+  this.thumbsUp += 1
+  this.save()
+})
+
+MessageSchema.method('repliesIncr', function repliesIncr() {
+  this.replies += 1
+  this.save()
+})
+
 const IdCount = mongoose.model('IdCount', IdCountSchema)
 const User = mongoose.model('User', UserSchema)
+const Message = mongoose.model('Message', MessageSchema)
 
-module.exports = { IdCount, User }
+module.exports = { IdCount, User, Message }
