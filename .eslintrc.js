@@ -15,7 +15,7 @@ module.exports = {
       'error',
       { arrays: 'always-multiline', objects: 'always-multiline', functions: 'never' },
     ],
-    'no-underscore-dangle': ['error', { allow: ['_id'] }],
+    'no-underscore-dangle': 'off',
     'object-curly-newline': ['error', { multiline: true }],
   },
 }

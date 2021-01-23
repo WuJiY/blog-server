@@ -25,7 +25,7 @@ router.get(
         'avatar',
         'registerDate',
         'passModified',
-      ])
+      ]).exec()
       if (!user) {
         ctx.status = 400
         return
@@ -34,7 +34,7 @@ router.get(
       user.updateActive()
     } catch (e) {
       ctx.status = 500
-      logger.error(new Date(), e)
+      logger.error(e)
     }
   }
 )

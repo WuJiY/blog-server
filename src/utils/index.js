@@ -12,6 +12,7 @@ const errorlogout =
     ? process.stderr
     : createWriteStream(join(__dirname, '../../server.log'), { flags: 'a' })
 const logger = new console.Console(process.stdout, errorlogout)
+logger.error = logger.error.bind(null, new Date().toLocaleString('zh-CN', { hour12: false }))
 
 const constans = {
   //       UTC+8      7 days
@@ -41,7 +42,7 @@ async function connectDb() {
     })
     logger.log('Successfully connected to mongoDb')
   } catch (e) {
-    logger.error(new Date(), e)
+    logger.error(e)
     process.exit(1)
   }
 }
@@ -122,10 +123,7 @@ function handleSort(arr, key, order) {
  */
 function handlePage(arr, page, limit = '10') {
   const paged = chunk(arr, parseInt(limit, 10))
-  if (paged.length === 0) {
-    return []
-  }
-  return paged[parseInt(page, 10) - 1]
+  return paged[parseInt(page, 10) - 1] ?? []
 }
 
 module.exports = {

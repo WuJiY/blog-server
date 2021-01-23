@@ -40,14 +40,19 @@ const MessageSchema = new Schema({
   user: { type: Number, ref: 'User' },
   content: { type: String, required: true },
   date: { type: Date, default: new Date() },
-  // 点赞数
-  thumbsUp: { type: Number, default: 0 },
+  // 点赞用户id数组
+  thumbsUpUserList: [Number],
   // 回复数
   replies: { type: Number, default: 0 },
 })
 
-MessageSchema.method('thumbsUpIncr', function thumbsUpIncr() {
-  this.thumbsUp += 1
+MessageSchema.method('updateThumbsUp', function updateThumbsUp(userId) {
+  const index = this.thumbsUpUserList.indexOf(userId)
+  if (index === -1) {
+    this.thumbsUpUserList.push(userId)
+  } else {
+    this.thumbsUpUserList.splice(index, 1)
+  }
   this.save()
 })
 

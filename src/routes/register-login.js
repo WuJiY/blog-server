@@ -16,10 +16,8 @@ const {
  * @param {number} id
  */
 async function updateUserActive(id) {
-  const user = await User.findById(id)
-  if (user) {
-    user.updateActive()
-  }
+  const user = await User.findById(id).exec()
+  user?.updateActive()
 }
 
 const router = new Router()
@@ -33,8 +31,8 @@ router.post('/register', async (ctx) => {
   }
   try {
     const [user, idCount, hashed] = await Promise.all([
-      User.findOne({ mail }),
-      IdCount.findById('users'),
+      User.findOne({ mail }).exec(),
+      IdCount.findById('users').exec(),
       hashPassword(pass),
     ])
     if (user) {
@@ -55,7 +53,7 @@ router.post('/register', async (ctx) => {
     idCount.incr()
   } catch (e) {
     ctx.status = 500
-    logger.error(new Date(), e)
+    logger.error(e)
   }
 })
 
@@ -76,7 +74,7 @@ router.get(
       updateUserActive(id)
     } catch (e) {
       ctx.status = 500
-      logger.error(new Date(), e)
+      logger.error(e)
     }
   }
 )
@@ -89,7 +87,7 @@ router.post('/login', async (ctx) => {
     return
   }
   try {
-    const user = await User.findOne({ mail }, ['_id', 'salt', 'pass'])
+    const user = await User.findOne({ mail }, ['_id', 'salt', 'pass']).exec()
     if (!user) {
       ctx.status = 400
       return
@@ -103,10 +101,10 @@ router.post('/login', async (ctx) => {
     ctx.cookies.set('user_token', token, userTokenCookie)
     ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
     ctx.status = 200
-    updateUserActive(user._id)
+    user.updateActive()
   } catch (e) {
     ctx.status = 500
-    logger.error(new Date(), e)
+    logger.error(e)
   }
 })
 
@@ -117,7 +115,7 @@ router.get('/logout', (ctx) => {
     ctx.status = 200
   } catch (e) {
     ctx.status = 500
-    logger.error(new Date(), e)
+    logger.error(e)
   }
 })
 
