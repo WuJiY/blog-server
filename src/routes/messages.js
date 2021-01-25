@@ -1,12 +1,12 @@
 const Router = require('@koa/router')
 const Koajwt = require('koa-jwt')
-const { Message, IdCount } = require('../db')
+const { Message, IdCount, Reply } = require('../db')
 const {
   logger,
-  handleSort,
-  handlePage,
   getToken,
   constans: { PUBLIC_KEY },
+  sortByKeyOrder,
+  pageOne,
 } = require('../utils')
 
 const router = new Router({ prefix: '/messages' })
@@ -24,11 +24,25 @@ router.get('/length', async (ctx) => {
 router.get('/', async (ctx) => {
   const { sort, order, page, limit } = ctx.query
   try {
-    const messages = await Message.find({}, '-__v')
-      .populate('user', 'name avatar lastActive')
+    const messages = await Message.find({})
+      .populate('user', 'name avatar lastActiveAt')
+      .populate({
+        path: 'replies',
+        populate: {
+          path: 'user',
+          select: 'name avatar lastActiveAt',
+        },
+      })
+      .populate({
+        path: 'replies',
+        populate: {
+          path: 'to',
+          select: 'name avatar lastActiveAt',
+        },
+      })
       .exec()
-    handleSort(messages, sort, order)
-    ctx.body = handlePage(messages, page, limit)
+    sortByKeyOrder(messages, sort, order)
+    ctx.body = pageOne(messages, page, limit)
   } catch (e) {
     ctx.status = 500
     logger.error(e)
@@ -39,9 +53,8 @@ router.post('/', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
   const { id } = ctx.state.user
   const { content } = ctx.request.body
   try {
-    const idCount = await IdCount.findById('messages').exec()
+    const idCount = await IdCount.findByIdAndUpdate('messages', { $inc: { value: 1 } }).exec()
     await Message.create({ _id: idCount.value, user: id, content })
-    idCount.incr()
     ctx.status = 200
   } catch (e) {
     ctx.status = 500
@@ -49,16 +62,36 @@ router.post('/', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
   }
 })
 
-router.post('/thumbsUp', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
+router.patch('/:messageId/thumbsUp', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
   const { id: userId } = ctx.state.user
-  const { messageId } = ctx.request.body
+  const messageId = parseInt(ctx.params.messageId, 10)
   try {
     const message = await Message.findById(messageId).exec()
-    message.updateThumbsUp(userId)
+    await message.updateThumbsUp(userId)
     ctx.status = 200
   } catch (e) {
     ctx.status = 500
     logger.error(e)
+  }
+})
+
+router.post('/:messageId/replies', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
+  const messageId = parseInt(ctx.params.messageId, 10)
+  const { content, to } = ctx.request.body
+  const { id } = ctx.state.user
+  try {
+    const [message, idCount] = await Promise.all([
+      Message.findByIdAndUpdate(messageId, { $inc: { repliesLength: 1 } }).exec(),
+      IdCount.findByIdAndUpdate('replies', { $inc: { value: 1 } }).exec(),
+    ])
+    await Promise.all([
+      Reply.create({ _id: idCount.value, user: id, content, messageId, to }),
+      message.pushReplies(idCount.value),
+    ])
+    ctx.status = 200
+  } catch (e) {
+    ctx.status = 500
+    logger(e)
   }
 })
 

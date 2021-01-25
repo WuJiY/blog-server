@@ -2,67 +2,81 @@ const mongoose = require('mongoose')
 
 const { Schema } = mongoose
 
+const option = { toJSON: { versionKey: false } }
+
 // 对应collection已用id计数表
-const IdCountSchema = new Schema({
-  _id: String,
-  value: { type: Number, default: 0 },
-})
+const IdCountSchema = new Schema(
+  {
+    _id: String,
+    value: { type: Number, default: 0 },
+  },
+  option
+)
 
-IdCountSchema.method('incr', function incr() {
-  this.value += 1
-  this.save()
-})
+const UserSchema = new Schema(
+  {
+    _id: Number,
+    mail: { type: String, required: true },
+    name: { type: String, required: true },
+    salt: { type: String, required: true },
+    pass: { type: String, required: true },
+    // 头像链接 todo:头像上传功能
+    avatar: { type: String, default: '' },
+    // 注册时间
+    registeredAt: { type: Date, default: Date.now },
+    // 最近活动时间
+    lastActiveAt: { type: Date, default: Date.now },
+  },
+  option
+)
 
-const UserSchema = new Schema({
-  _id: Number,
-  mail: { type: String, required: true },
-  name: { type: String, required: true },
-  salt: { type: String, required: true },
-  pass: { type: String, required: true },
-  // 头像链接 todo:头像上传功能
-  avatar: { type: String, default: '' },
-  // 注册时间
-  registerDate: { type: Date, default: new Date() },
-  // 最近活动时间
-  lastActive: { type: Date, default: new Date() },
-  // 密码最近修改时间
-  passModified: { type: Date, default: new Date() },
-})
+const MessageSchema = new Schema(
+  {
+    _id: Number,
+    user: { type: Number, ref: 'User' },
+    content: { type: String, required: true },
+    date: { type: Date, default: Date.now },
+    // 点赞用户列表
+    thumbsUpUsers: [{ type: Number, ref: 'User' }],
+    // 用户回复列表
+    replies: [{ type: Number, ref: 'Reply' }],
+    // 回复数
+    repliesLength: { type: Number, default: 0 },
+  },
+  option
+)
 
-// 更新用户最近活动时间
-UserSchema.method('updateActive', function updateActive() {
-  this.lastActive = new Date()
-  this.save()
-})
-
-const MessageSchema = new Schema({
-  _id: Number,
-  user: { type: Number, ref: 'User' },
-  content: { type: String, required: true },
-  date: { type: Date, default: new Date() },
-  // 点赞用户id数组
-  thumbsUpUserList: [Number],
-  // 回复数
-  replies: { type: Number, default: 0 },
-})
-
-MessageSchema.method('updateThumbsUp', function updateThumbsUp(userId) {
-  const index = this.thumbsUpUserList.indexOf(userId)
+MessageSchema.methods.updateThumbsUp = function updateThumbsUp(userId) {
+  const index = this.thumbsUpUsers.indexOf(userId)
   if (index === -1) {
-    this.thumbsUpUserList.push(userId)
+    this.thumbsUpUsers.push(userId)
   } else {
-    this.thumbsUpUserList.splice(index, 1)
+    this.thumbsUpUsers.splice(index, 1)
   }
-  this.save()
-})
+  return this.save()
+}
 
-MessageSchema.method('repliesIncr', function repliesIncr() {
-  this.replies += 1
-  this.save()
-})
+MessageSchema.methods.pushReplies = function pushReplies(replyId) {
+  this.replies.push(replyId)
+  return this.save()
+}
+
+const ReplySchema = new Schema(
+  {
+    _id: Number,
+    content: { type: String, required: true },
+    date: { type: Date, default: Date.now },
+    // 发送者
+    user: { type: Number, ref: 'User' },
+    // 是否回复某个用户
+    to: { type: Number, ref: 'User' },
+  },
+  option
+)
 
 const IdCount = mongoose.model('IdCount', IdCountSchema)
 const User = mongoose.model('User', UserSchema)
 const Message = mongoose.model('Message', MessageSchema)
+const Reply = mongoose.model('Reply', ReplySchema)
 
-module.exports = { IdCount, User, Message }
+module.exports = { IdCount, User, Message, Reply }

@@ -39,6 +39,7 @@ async function connectDb() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       autoIndex: false,
+      useFindAndModify: false,
     })
     logger.log('Successfully connected to mongoDb')
   } catch (e) {
@@ -95,11 +96,12 @@ function getToken(ctx) {
 
 /**
  * 处理排序查询
- * @param {any[]} arr
- * @param {string} key
- * @param {string} order
+ * @param {object[]} arr 由对象组成的数组
+ * @param {string} key 元素对象属性
+ * @param {string} order 升序或降序('asc' | 'desc')，默认升序
+ * @returns 原地排序无返回值
  */
-function handleSort(arr, key, order) {
+function sortByKeyOrder(arr, key, order) {
   let flag = -1
   if (order === 'desc') {
     flag = 1
@@ -116,12 +118,12 @@ function handleSort(arr, key, order) {
 }
 
 /**
- * 处理分页查询
- * @param {any[]} arr
- * @param {string} page
- * @param {string} limit
+ * 处理分页查询，返回特定页
+ * @param {any[]} arr 任意数组
+ * @param {string} page 页码
+ * @param {string} limit 每页元素个数，默认10
  */
-function handlePage(arr, page, limit = '10') {
+function pageOne(arr, page, limit = '10') {
   const paged = chunk(arr, parseInt(limit, 10))
   return paged[parseInt(page, 10) - 1] ?? []
 }
@@ -135,6 +137,6 @@ module.exports = {
   verifyPassword,
   signToken,
   getToken,
-  handleSort,
-  handlePage,
+  sortByKeyOrder,
+  pageOne,
 }

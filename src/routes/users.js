@@ -19,19 +19,14 @@ router.get(
   async (ctx) => {
     try {
       const { id } = ctx.state.user
-      const user = await User.findById(id, [
-        'name',
-        'mail',
-        'avatar',
-        'registerDate',
-        'passModified',
-      ]).exec()
+      const user = await User.findByIdAndUpdate(id, { lastActiveAt: Date.now() })
+        .select('name mail avatar registeredAt')
+        .exec()
       if (!user) {
         ctx.status = 400
         return
       }
       ctx.body = user
-      user.updateActive()
     } catch (e) {
       ctx.status = 500
       logger.error(e)

@@ -11,15 +11,6 @@ const {
   logger,
 } = require('../utils')
 
-/**
- * 更新用户最近活动时间
- * @param {number} id
- */
-async function updateUserActive(id) {
-  const user = await User.findById(id).exec()
-  user?.updateActive()
-}
-
 const router = new Router()
 
 router.post('/register', async (ctx) => {
@@ -30,15 +21,15 @@ router.post('/register', async (ctx) => {
     return
   }
   try {
-    const [user, idCount, hashed] = await Promise.all([
-      User.findOne({ mail }).exec(),
-      IdCount.findById('users').exec(),
-      hashPassword(pass),
-    ])
+    const user = User.findOne({ mail }).exec()
     if (user) {
       ctx.status = 400
       return
     }
+    const [idCount, hashed] = await Promise.all([
+      IdCount.findByIdAndUpdate('users', { $inc: { value: 1 } }).exec(),
+      hashPassword(pass),
+    ])
     const token = signToken({ id: idCount.value })
     ctx.cookies.set('user_token', token, userTokenCookie)
     ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
@@ -50,7 +41,6 @@ router.post('/register', async (ctx) => {
       salt: hashed.salt,
       pass: hashed.pass,
     })
-    idCount.incr()
   } catch (e) {
     ctx.status = 500
     logger.error(e)
@@ -71,7 +61,6 @@ router.get(
       ctx.cookies.set('user_token', token, userTokenCookie)
       ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
       ctx.status = 200
-      updateUserActive(id)
     } catch (e) {
       ctx.status = 500
       logger.error(e)
@@ -87,7 +76,7 @@ router.post('/login', async (ctx) => {
     return
   }
   try {
-    const user = await User.findOne({ mail }, ['_id', 'salt', 'pass']).exec()
+    const user = await User.findOne({ mail }).exec()
     if (!user) {
       ctx.status = 400
       return
@@ -101,7 +90,6 @@ router.post('/login', async (ctx) => {
     ctx.cookies.set('user_token', token, userTokenCookie)
     ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
     ctx.status = 200
-    user.updateActive()
   } catch (e) {
     ctx.status = 500
     logger.error(e)
