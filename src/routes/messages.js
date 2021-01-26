@@ -1,6 +1,6 @@
 const Router = require('@koa/router')
 const Koajwt = require('koa-jwt')
-const { Message, IdCount, Reply } = require('../db')
+const { Message, IdCount, Reply, User } = require('../db')
 const {
   logger,
   getToken,
@@ -56,6 +56,7 @@ router.post('/', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
     const idCount = await IdCount.findByIdAndUpdate('messages', { $inc: { value: 1 } }).exec()
     await Message.create({ _id: idCount.value, user: id, content })
     ctx.status = 200
+    User.findByIdAndUpdate(id, { lastActiveAt: Date.now() }).exec()
   } catch (e) {
     ctx.status = 500
     logger.error(e)
@@ -69,6 +70,7 @@ router.patch('/:messageId/thumbsUp', Koajwt({ getToken, secret: PUBLIC_KEY }), a
     const message = await Message.findById(messageId).exec()
     await message.updateThumbsUp(userId)
     ctx.status = 200
+    User.findByIdAndUpdate(userId, { lastActiveAt: Date.now() }).exec()
   } catch (e) {
     ctx.status = 500
     logger.error(e)
@@ -89,6 +91,7 @@ router.post('/:messageId/replies', Koajwt({ getToken, secret: PUBLIC_KEY }), asy
       message.pushReplies(idCount.value),
     ])
     ctx.status = 200
+    User.findByIdAndUpdate(id, { lastActiveAt: Date.now() }).exec()
   } catch (e) {
     ctx.status = 500
     logger(e)
