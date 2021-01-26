@@ -98,13 +98,13 @@ function getToken(ctx) {
  * 处理排序查询
  * @param {object[]} arr 由对象组成的数组
  * @param {string} key 元素对象属性
- * @param {string} order 升序或降序('asc' | 'desc')，默认升序
+ * @param {string} order 升序或降序('asc' | 'desc')，默认降序
  * @returns 原地排序无返回值
  */
 function sortByKeyOrder(arr, key, order) {
-  let flag = -1
-  if (order === 'desc') {
-    flag = 1
+  let flag = 1
+  if (order === 'asc') {
+    flag = -1
   }
   arr.sort((a, b) => {
     if (a[key] < b[key]) {

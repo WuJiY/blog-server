@@ -12,6 +12,7 @@
     "@koa/cors": "^3.1.0",
     "@koa/router": "^10.0.0",
     "bcrypt": "^5.0.0",
+    "highlight.js": "^10.5.0",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
@@ -19,6 +20,7 @@
     "koa-jwt": "^4.0.0",
     "koa-logger": "^3.2.1",
     "lodash": "^4.17.20",
+    "marked": "^1.2.8",
     "mongoose": "^5.11.11"
   },
   "devDependencies": {

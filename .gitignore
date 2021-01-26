@@ -23,6 +23,7 @@ pnpm-debug.log*
 
 # Other
 /assets
-todo.md
+/todo.md
 /*.log
 /utils
+/posts
