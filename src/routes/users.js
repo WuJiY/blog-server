@@ -10,28 +10,26 @@ const {
 const router = new Router({ prefix: '/users' })
 
 // 自动登录后传用户数据
-router.get(
-  '/current',
-  Koajwt({
-    getToken,
-    secret: PUBLIC_KEY,
-  }),
-  async (ctx) => {
-    try {
-      const { id } = ctx.state.user
-      const user = await User.findByIdAndUpdate(id, { lastActiveAt: Date.now() })
-        .select('name mail avatar registeredAt')
-        .exec()
-      if (!user) {
-        ctx.status = 400
-        return
-      }
-      ctx.body = user
-    } catch (e) {
-      ctx.status = 500
-      logger.error(e)
+router.get('/current', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
+  try {
+    const { id } = ctx.state.user
+    const user = await User.findByIdAndUpdate(id, { lastActiveAt: Date.now() })
+      .select('name mail avatar registeredAt')
+      .exec()
+    if (!user) {
+      ctx.status = 400
+      return
     }
+    ctx.body = user
+  } catch (e) {
+    ctx.status = 500
+    logger.error(e)
   }
-)
+})
+
+router.patch('/polling', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
+  await User.findByIdAndUpdate(ctx.state.user.id, { lastActiveAt: Date.now() })
+  ctx.status = 200
+})
 
 module.exports = router.routes()

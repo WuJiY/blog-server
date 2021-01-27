@@ -11,7 +11,7 @@ marked.setOptions({
 })
 
 /**
- * 读取博客帖子目录并转换为对象
+ * 读取博客帖子并转换为对象
  * @param {string} dirPath 文件夹相对路径
  */
 async function parsePosts(dirPath) {

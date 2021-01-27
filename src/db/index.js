@@ -74,9 +74,21 @@ const ReplySchema = new Schema(
   option
 )
 
+const FriendSchema = new Schema(
+  {
+    _id: Number,
+    name: { type: String, required: true },
+    avatar: { type: String, required: true },
+    desc: { type: String, required: true },
+    link: { type: String, required: true },
+  },
+  option
+)
+
 const IdCount = mongoose.model('IdCount', IdCountSchema)
 const User = mongoose.model('User', UserSchema)
 const Message = mongoose.model('Message', MessageSchema)
 const Reply = mongoose.model('Reply', ReplySchema)
+const Friend = mongoose.model('Friend', FriendSchema)
 
-module.exports = { IdCount, User, Message, Reply }
+module.exports = { IdCount, User, Message, Reply, Friend }

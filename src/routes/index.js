@@ -6,5 +6,6 @@ router.use(require('./users'))
 router.use(require('./register-login'))
 router.use(require('./messages'))
 router.use(require('./posts'))
+router.use(require('./friends'))
 
 module.exports = router
