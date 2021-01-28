@@ -2,11 +2,13 @@
   "name": "blog-server",
   "version": "1.0.0",
   "private": true,
-  "main": "./src/index.js",
+  "main": "./src/app.js",
   "license": "MIT",
   "author": "ApassEr <wongzero@foxmail.com>",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon --delay 5"
+    "dev": "cross-env NODE_ENV=development nodemon --delay 5",
+    "test": "cross-env NODE_ENV=test mocha --exit ./tests/**/*.test.js",
+    "start": "cross-env NODE_ENV=production pm2 start --name blog-server ./src/app.js"
   },
   "dependencies": {
     "@koa/cors": "^3.1.0",
@@ -28,6 +30,8 @@
     "eslint": "^7.2.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
-    "nodemon": "^2.0.7"
+    "mocha": "^8.2.1",
+    "nodemon": "^2.0.7",
+    "supertest": "^6.1.3"
   }
 }
