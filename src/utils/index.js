@@ -6,11 +6,7 @@ const jwt = require('jsonwebtoken')
 const chunk = require('lodash/chunk')
 const auth = require('../../assets/auth.json')
 
-// eslint-disable-next-line operator-linebreak
-const errorlogout =
-  process.env.NODE_ENV === 'development'
-    ? process.stderr
-    : createWriteStream(join(__dirname, '../../server.log'), { flags: 'a' })
+const errorlogout = createWriteStream(join(__dirname, '../../server.log'), { flags: 'a' })
 const logger = new console.Console(process.stdout, errorlogout)
 logger.error = logger.error.bind(null, new Date().toLocaleString('zh-CN', { hour12: false }))
 
@@ -18,22 +14,30 @@ const constans = {
   //       UTC+8      7 days
   MAX_AGE: 28800000 + 604800000,
   PUBLIC_KEY: readFileSync(join(__dirname, '../../assets/public.pem')),
+  PRIVATE_KEY: readFileSync(join(__dirname, '../../assets/private.pem')),
 }
 
 const config = {
-  userTokenCookie: { maxAge: constans.MAX_AGE },
+  userTokenCookie: {
+    maxAge: constans.MAX_AGE,
+    secure: process.env.NODE_ENV === 'production',
+  },
   userExpCookie: {
     maxAge: constans.MAX_AGE,
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: false,
   },
+  origin: process.env.NODE_ENV === 'production' ? 'https://apasser.xyz' : undefined,
+  port: process.env.NODE_ENV === 'production' ? '443' : '3000',
 }
 
 /**
  * 连接数据库
  */
 async function connectDb() {
+  const dbName = process.env.NODE_ENV === 'test' ? 'blog-test' : 'blog'
   try {
-    await mongoose.connect('mongodb://localhost/blog', {
+    await mongoose.connect(`mongodb://localhost/${dbName}`, {
       user: auth.user,
       pass: auth.pass,
       useNewUrlParser: true,
@@ -41,7 +45,6 @@ async function connectDb() {
       autoIndex: false,
       useFindAndModify: false,
     })
-    logger.log('Successfully connected to mongoDb')
   } catch (e) {
     logger.error(e)
     process.exit(1)
@@ -74,8 +77,7 @@ async function verifyPassword(pass, salt) {
  * @param {object} payload 负载对象
  */
 function signToken(payload) {
-  const key = readFileSync(join(__dirname, '../../assets/private.pem'))
-  const token = jwt.sign(payload, key, {
+  const token = jwt.sign(payload, constans.PRIVATE_KEY, {
     algorithm: 'RS256',
     expiresIn: constans.MAX_AGE - 28800000,
   })

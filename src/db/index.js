@@ -2,28 +2,17 @@ const mongoose = require('mongoose')
 
 const { Schema } = mongoose
 
-const option = { toJSON: { versionKey: false } }
-
-// 对应collection已用id计数表
-const IdCountSchema = new Schema(
-  {
-    _id: String,
-    value: { type: Number, default: 0 },
-  },
-  option
-)
+const option = { toJSON: { versionKey: false }, timestamps: true }
 
 const UserSchema = new Schema(
   {
-    _id: Number,
     mail: { type: String, required: true },
     name: { type: String, required: true },
     salt: { type: String, required: true },
     pass: { type: String, required: true },
-    // 头像链接 todo:头像上传功能
+    role: { type: String, default: 'normal' },
+    // 头像链接
     avatar: { type: String, default: '' },
-    // 注册时间
-    registeredAt: { type: Date, default: Date.now },
     // 最近活动时间
     lastActiveAt: { type: Date, default: Date.now },
   },
@@ -32,16 +21,13 @@ const UserSchema = new Schema(
 
 const MessageSchema = new Schema(
   {
-    _id: Number,
-    user: { type: Number, ref: 'User' },
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
     content: { type: String, required: true },
     date: { type: Date, default: Date.now },
     // 点赞用户列表
-    thumbsUpUsers: [{ type: Number, ref: 'User' }],
+    thumbsUpUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     // 用户回复列表
-    replies: [{ type: Number, ref: 'Reply' }],
-    // 回复数
-    repliesLength: { type: Number, default: 0 },
+    replies: [{ type: Schema.Types.ObjectId, ref: 'Reply' }],
   },
   option
 )
@@ -63,20 +49,18 @@ MessageSchema.methods.pushReplies = function pushReplies(replyId) {
 
 const ReplySchema = new Schema(
   {
-    _id: Number,
     content: { type: String, required: true },
     date: { type: Date, default: Date.now },
     // 发送者
-    user: { type: Number, ref: 'User' },
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
     // 是否回复某个用户
-    to: { type: Number, ref: 'User' },
+    to: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   option
 )
 
 const FriendSchema = new Schema(
   {
-    _id: Number,
     name: { type: String, required: true },
     avatar: { type: String, required: true },
     desc: { type: String, required: true },
@@ -85,10 +69,9 @@ const FriendSchema = new Schema(
   option
 )
 
-const IdCount = mongoose.model('IdCount', IdCountSchema)
 const User = mongoose.model('User', UserSchema)
 const Message = mongoose.model('Message', MessageSchema)
 const Reply = mongoose.model('Reply', ReplySchema)
 const Friend = mongoose.model('Friend', FriendSchema)
 
-module.exports = { IdCount, User, Message, Reply, Friend }
+module.exports = { User, Message, Reply, Friend }

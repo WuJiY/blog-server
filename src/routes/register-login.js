@@ -1,6 +1,6 @@
 const Router = require('@koa/router')
 const Koajwt = require('koa-jwt')
-const { IdCount, User } = require('../db')
+const { User } = require('../db')
 const {
   hashPassword,
   verifyPassword,
@@ -8,46 +8,26 @@ const {
   getToken,
   constans: { PUBLIC_KEY },
   config: { userTokenCookie, userExpCookie },
-  logger,
 } = require('../utils')
 
 const router = new Router()
 
 router.post('/register', async (ctx) => {
   const { mail, name, pass } = ctx.request.body
-  // todo: 人机验证(captcha)
-  if (!mail || !name || !pass) {
-    ctx.status = 403
-    return
+  const exits = await User.findOne({ mail }).exec()
+  if (exits) {
+    ctx.throw(400, '用户已存在')
   }
-  try {
-    const user = User.findOne({ mail }).exec()
-    if (user) {
-      ctx.status = 400
-      return
-    }
-    const [idCount, hashed] = await Promise.all([
-      IdCount.findByIdAndUpdate('users', { $inc: { value: 1 } }).exec(),
-      hashPassword(pass),
-    ])
-    const token = signToken({ id: idCount.value })
-    ctx.cookies.set('user_token', token, userTokenCookie)
-    ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
-    ctx.status = 200
-    await User.create({
-      _id: idCount.value,
-      mail,
-      name,
-      salt: hashed.salt,
-      pass: hashed.pass,
-    })
-  } catch (e) {
-    ctx.status = 500
-    logger.error(e)
-  }
+  const hashed = await hashPassword(pass)
+  const user = await User.create({ mail, name, salt: hashed.salt, pass: hashed.pass })
+  const token = signToken({ id: user._id, role: user.role })
+  ctx.cookies.set('user_token', token, userTokenCookie)
+  ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
+  ctx.status = 200
+  ctx.body = { message: '注册成功' }
 })
 
-// token验证，续期，用于自动登录
+// token验证，续期
 router.get(
   '/login',
   Koajwt({
@@ -55,56 +35,35 @@ router.get(
     secret: PUBLIC_KEY,
   }),
   async (ctx) => {
-    try {
-      const { id } = ctx.state.user
-      const token = signToken({ id })
-      ctx.cookies.set('user_token', token, userTokenCookie)
-      ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
-      ctx.status = 200
-    } catch (e) {
-      ctx.status = 500
-      logger.error(e)
-    }
+    const { id, role } = ctx.state.user
+    const token = signToken({ id, role })
+    ctx.cookies.set('user_token', token, userTokenCookie)
+    ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
+    ctx.status = 200
   }
 )
 
 router.post('/login', async (ctx) => {
   const { mail, pass } = ctx.request.body
-  // todo: 人机验证(captcha)
-  if (!mail || !pass) {
-    ctx.status = 403
-    return
+  const user = await User.findOne({ mail }).exec()
+  if (!user) {
+    ctx.throw(400, '用户不存在')
   }
-  try {
-    const user = await User.findOne({ mail }).exec()
-    if (!user) {
-      ctx.status = 400
-      return
-    }
-    const hashedPass = await verifyPassword(pass, user.salt)
-    if (user.pass !== hashedPass) {
-      ctx.status = 401
-      return
-    }
-    const token = signToken({ id: user._id })
-    ctx.cookies.set('user_token', token, userTokenCookie)
-    ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
-    ctx.status = 200
-  } catch (e) {
-    ctx.status = 500
-    logger.error(e)
+  const hashedPass = await verifyPassword(pass, user.salt)
+  if (user.pass !== hashedPass) {
+    ctx.throw(400, '密码错误')
   }
+  const token = signToken({ id: user._id, role: user.role })
+  ctx.cookies.set('user_token', token, userTokenCookie)
+  ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
+  ctx.status = 200
+  ctx.body = { message: '登录成功' }
 })
 
 router.get('/logout', (ctx) => {
-  try {
-    ctx.cookies.set('user_token', '', { maxAge: 0 })
-    ctx.cookies.set('user_exp', '', { maxAge: 0 })
-    ctx.status = 200
-  } catch (e) {
-    ctx.status = 500
-    logger.error(e)
-  }
+  ctx.cookies.set('user_token')
+  ctx.cookies.set('user_exp')
+  ctx.status = 200
 })
 
 module.exports = router.routes()
