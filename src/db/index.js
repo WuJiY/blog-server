@@ -23,7 +23,6 @@ const MessageSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     content: { type: String, required: true },
-    date: { type: Date, default: Date.now },
     // 点赞用户列表
     thumbsUpUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     // 用户回复列表
@@ -49,10 +48,8 @@ MessageSchema.methods.pushReplies = function pushReplies(replyId) {
 
 const ReplySchema = new Schema(
   {
-    content: { type: String, required: true },
-    date: { type: Date, default: Date.now },
-    // 发送者
     user: { type: Schema.Types.ObjectId, ref: 'User' },
+    content: { type: String, required: true },
     // 是否回复某个用户
     to: { type: Schema.Types.ObjectId, ref: 'User' },
   },

@@ -101,9 +101,12 @@ function getToken(ctx) {
  * @param {object[]} arr 由对象组成的数组
  * @param {string} key 元素对象属性
  * @param {string} order 升序或降序('asc' | 'desc')，默认降序
- * @returns 原地排序无返回值
+ * @returns 有key：原地排序无返回值；无key：无操作
  */
 function sortByKeyOrder(arr, key, order) {
+  if (!key) {
+    return
+  }
   let flag = 1
   if (order === 'asc') {
     flag = -1
@@ -124,10 +127,22 @@ function sortByKeyOrder(arr, key, order) {
  * @param {any[]} arr 任意数组
  * @param {string} page 页码
  * @param {string} limit 每页元素个数，默认10
+ * @returns {[] | any[]} 有page：可分页则返回指定页数组，不可分页或page < 1返回空数组；无page：返回原数组
  */
 function pageOne(arr, page, limit = '10') {
+  if (!page) {
+    return arr
+  }
   const paged = chunk(arr, parseInt(limit, 10))
   return paged[parseInt(page, 10) - 1] ?? []
+}
+
+/**
+ * @param {any[]} arr 任意数组
+ * @param {string} limit 每页元素个数，默认10
+ */
+function pageAll(arr, limit = '10') {
+  return chunk(arr, parseInt(limit, 10))
 }
 
 module.exports = {
@@ -141,4 +156,5 @@ module.exports = {
   getToken,
   sortByKeyOrder,
   pageOne,
+  pageAll,
 }

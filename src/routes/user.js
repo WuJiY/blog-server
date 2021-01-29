@@ -11,6 +11,7 @@ const router = new Router({ prefix: '/user' })
 // 自动登录
 router.get('/auth', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
   const user = await User.findByIdAndUpdate(ctx.state.user.id, { lastActiveAt: Date.now() })
+    .lean()
     .select('name mail avatar createdAt role')
     .exec()
   ctx.body = user

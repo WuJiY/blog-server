@@ -20,7 +20,8 @@ router.post('/register', async (ctx) => {
   }
   const hashed = await hashPassword(pass)
   const user = await User.create({ mail, name, salt: hashed.salt, pass: hashed.pass })
-  const token = signToken({ id: user._id, role: user.role })
+  //                        改为字符串版本
+  const token = signToken({ id: user.id, role: user.role })
   ctx.cookies.set('user_token', token, userTokenCookie)
   ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
   ctx.status = 200
@@ -28,20 +29,13 @@ router.post('/register', async (ctx) => {
 })
 
 // token验证，续期
-router.get(
-  '/login',
-  Koajwt({
-    getToken,
-    secret: PUBLIC_KEY,
-  }),
-  async (ctx) => {
-    const { id, role } = ctx.state.user
-    const token = signToken({ id, role })
-    ctx.cookies.set('user_token', token, userTokenCookie)
-    ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
-    ctx.status = 200
-  }
-)
+router.get('/login', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
+  const { id, role } = ctx.state.user
+  const token = signToken({ id, role })
+  ctx.cookies.set('user_token', token, userTokenCookie)
+  ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
+  ctx.status = 200
+})
 
 router.post('/login', async (ctx) => {
   const { mail, pass } = ctx.request.body
