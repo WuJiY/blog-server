@@ -25,5 +25,4 @@ pnpm-debug.log*
 /assets
 /todo.md
 /*.log
-/utils
 /posts

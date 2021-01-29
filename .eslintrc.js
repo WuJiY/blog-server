@@ -18,4 +18,10 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'object-curly-newline': ['error', { multiline: true }],
   },
+  overrides: [
+    {
+      files: ['./tests/**/*.test.js'],
+      rules: { 'import/order': 'off' },
+    },
+  ],
 }
