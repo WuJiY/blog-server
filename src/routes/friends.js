@@ -1,18 +1,13 @@
 const Router = require('@koa/router')
 const { Friend } = require('../db')
-const { logger, pageOne } = require('../utils')
+const { pageOne } = require('../utils')
 
 const router = new Router({ prefix: '/friends' })
 
 router.get('/', async (ctx) => {
   const { page, limit } = ctx.query
-  try {
-    const friens = await Friend.find({}).exec()
-    ctx.body = pageOne(friens, page, limit)
-  } catch (e) {
-    ctx.status = 500
-    logger.error(e)
-  }
+  const friens = await Friend.find({}).lean().exec()
+  ctx.body = pageOne(friens, page, limit)
 })
 
 module.exports = router.routes()
