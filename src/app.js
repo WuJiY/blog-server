@@ -27,14 +27,14 @@ app.use(async (ctx, next) => {
     await next()
   } catch (err) {
     if (!err.expose) {
-      logger.error(err)
+      logger.error(new Date().toLocaleString('zh-CN', { hour12: false }), err)
     }
     if (err.status === 401) {
       err.message = '用户认证失败，请重新登录'
     } else if (err.status === 500) {
       err.message = '服务器错误'
     }
-    ctx.status = err.status
+    ctx.status = err.statusCode || err.status || 500
     throw err
   }
 })
@@ -42,5 +42,4 @@ app.use(async (ctx, next) => {
 app.use(router.routes())
 app.use(router.allowedMethods())
 
-// 应该导出app.listen()返回的Server对象，而不是app本身
-module.exports = app.listen(3000)
+module.exports = app.callback()

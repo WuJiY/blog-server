@@ -8,7 +8,6 @@ const auth = require('../../assets/auth.json')
 
 const errorlogout = createWriteStream(join(__dirname, '../../server.log'), { flags: 'a' })
 const logger = new console.Console(process.stdout, errorlogout)
-logger.error = logger.error.bind(null, new Date().toLocaleString('zh-CN', { hour12: false }))
 
 const constans = {
   //       UTC+8      7 days
@@ -45,7 +44,6 @@ async function connectDb() {
       useFindAndModify: false,
     })
   } catch (e) {
-    logger.error(e)
     process.exit(1)
   }
 }
