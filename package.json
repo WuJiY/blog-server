@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon --delay 5",
     "test": "cross-env NODE_ENV=test mocha --exit ./tests/**/*.test.js",
-    "start": "cross-env NODE_ENV=production pm2 start --name blog-server ./src/app.js"
+    "start": "cross-env NODE_ENV=production pm2 start --name blog-server ./bin/www"
   },
   "dependencies": {
     "@koa/cors": "^3.1.0",
