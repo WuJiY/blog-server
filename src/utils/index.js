@@ -28,7 +28,6 @@ const config = {
     httpOnly: false,
   },
   origin: process.env.NODE_ENV === 'production' ? 'https://apasser.xyz' : undefined,
-  port: process.env.NODE_ENV === 'production' ? '443' : '3000',
 }
 
 /**

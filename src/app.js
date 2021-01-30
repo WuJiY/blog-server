@@ -7,7 +7,7 @@ const router = require('./routes')
 const {
   connectDb,
   constans: { MAX_AGE },
-  config: { origin, port },
+  config: { origin },
   logger,
 } = require('./utils')
 
@@ -43,4 +43,4 @@ app.use(router.routes())
 app.use(router.allowedMethods())
 
 // 应该导出app.listen()返回的Server对象，而不是app本身
-module.exports = app.listen(port)
+module.exports = app.listen(3000)
