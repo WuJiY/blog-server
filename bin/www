@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const htts = require('https')
+const https = require('https')
 const { readFileSync } = require('fs')
 const { join } = require('path')
 const app = require('../src/app')
@@ -9,4 +9,4 @@ const httpsOpts = {
   cert: readFileSync(join(__dirname, '../assets/api.apasser.xyz.crt')),
 }
 
-htts.createServer(httpsOpts, app).listen(3000)
+https.createServer(httpsOpts, app).listen(3000)
