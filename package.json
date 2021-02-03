@@ -23,7 +23,8 @@
     "koa-logger": "^3.2.1",
     "lodash": "^4.17.20",
     "marked": "^1.2.8",
-    "mongoose": "^5.11.11"
+    "mongoose": "^5.11.11",
+    "tencentcloud-sdk-nodejs": "^4.0.63"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

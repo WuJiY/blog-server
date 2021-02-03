@@ -1,4 +1,5 @@
 const Router = require('@koa/router')
+const tencentcloud = require('tencentcloud-sdk-nodejs')
 const { User } = require('../db')
 const {
   hashPassword,
@@ -6,6 +7,7 @@ const {
   signToken,
   config: { userTokenCookie },
 } = require('../utils')
+const tencentCert = require('../../assets/tencent-credential.json')
 
 const router = new Router()
 
@@ -43,6 +45,28 @@ router.post('/login', async (ctx) => {
 router.get('/logout', (ctx) => {
   ctx.cookies.set('user_token', null, userTokenCookie)
   ctx.status = 200
+})
+
+router.post('/captcha', async (ctx) => {
+  const CaptchaClient = tencentcloud.captcha.v20190722.Client
+  const client = new CaptchaClient({
+    credential: tencentCert.credential,
+    region: '',
+    profile: { httpProfile: { endpoint: 'captcha.tencentcloudapi.com' } },
+  })
+  const res = await client.DescribeCaptchaResult({
+    CaptchaType: 9,
+    UserIp: ctx.ip,
+    ...ctx.request.body,
+    ...tencentCert.captcha,
+  })
+  if (res.CaptchaCode === 1) {
+    ctx.status = 200
+  } else {
+    const err = new Error(res.CaptchaMsg)
+    err.status = 403
+    throw err
+  }
 })
 
 module.exports = router.routes()
