@@ -10,8 +10,8 @@ const errorlogout = createWriteStream(join(__dirname, '../../server.log'), { fla
 const logger = new console.Console(process.stdout, errorlogout)
 
 const constans = {
-  //       UTC+8      7 days
-  MAX_AGE: 28800000 + 604800000,
+  //       7 days
+  MAX_AGE: 604800000,
   PUBLIC_KEY: readFileSync(join(__dirname, '../../assets/public.pem')),
   PRIVATE_KEY: readFileSync(join(__dirname, '../../assets/private.pem')),
 }
@@ -19,12 +19,7 @@ const constans = {
 const config = {
   userTokenCookie: {
     maxAge: constans.MAX_AGE,
-    secure: process.env.NODE_ENV === 'production',
-  },
-  userExpCookie: {
-    maxAge: constans.MAX_AGE,
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: false,
+    sameSite: 'none',
   },
   origin: process.env.NODE_ENV === 'production' ? 'https://apasser.xyz' : undefined,
 }
@@ -72,11 +67,13 @@ async function verifyPassword(pass, salt) {
 /**
  * 签发jwt
  * @param {object} payload 负载对象
+ * @param {number} expiresIn 默认7天，单位毫秒
  */
-function signToken(payload) {
-  const token = jwt.sign(payload, constans.PRIVATE_KEY, {
+function signToken(payload, expiresIn = constans.MAX_AGE) {
+  const token = jwt.sign({ iat: Date.now(), ...payload }, constans.PRIVATE_KEY, {
+    expiresIn,
     algorithm: 'RS256',
-    expiresIn: constans.MAX_AGE - 28800000,
+    noTimestamp: true,
   })
   return token
 }

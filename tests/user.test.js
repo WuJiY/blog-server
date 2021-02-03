@@ -7,11 +7,14 @@ const { signToken } = require('../src/utils')
 describe('用户操作[GET /user]', () => {
   let user
   let cookie
+  let expiringCookie
 
   before(async () => {
     user = await User.create({ mail: 't', name: 't', salt: 't', pass: 't' })
     const token = signToken({ id: user.id, role: user.role })
     cookie = `user_token=${token}`
+    const expiringToken = signToken({ id: user.id, role: user.role }, 60000)
+    expiringCookie = `user_token=${expiringToken}`
   })
 
   after(async () => {
@@ -40,5 +43,11 @@ describe('用户操作[GET /user]', () => {
     const res = await request.get('/user/auth')
     assert.equal(res.status, 401)
     assert.equal(res.text, '用户认证失败，请重新登录')
+  })
+
+  it('token快到期时自动续期', async () => {
+    const res = await request.get('/user/auth').set('Cookie', expiringCookie)
+    assert(res.status, 200)
+    assert.equal(res.headers['set-cookie'][0].split(';')[0].split('=')[0], 'user_token')
   })
 })

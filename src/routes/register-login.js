@@ -1,13 +1,10 @@
 const Router = require('@koa/router')
-const Koajwt = require('koa-jwt')
 const { User } = require('../db')
 const {
   hashPassword,
   verifyPassword,
   signToken,
-  getToken,
-  constans: { PUBLIC_KEY },
-  config: { userTokenCookie, userExpCookie },
+  config: { userTokenCookie },
 } = require('../utils')
 
 const router = new Router()
@@ -23,18 +20,8 @@ router.post('/register', async (ctx) => {
   //                        改为字符串版本
   const token = signToken({ id: user.id, role: user.role })
   ctx.cookies.set('user_token', token, userTokenCookie)
-  ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
   ctx.status = 200
   ctx.body = { message: '注册成功' }
-})
-
-// token验证，续期
-router.get('/login', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
-  const { id, role } = ctx.state.user
-  const token = signToken({ id, role })
-  ctx.cookies.set('user_token', token, userTokenCookie)
-  ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
-  ctx.status = 200
 })
 
 router.post('/login', async (ctx) => {
@@ -49,14 +36,12 @@ router.post('/login', async (ctx) => {
   }
   const token = signToken({ id: user._id, role: user.role })
   ctx.cookies.set('user_token', token, userTokenCookie)
-  ctx.cookies.set('user_exp', String(Date.now() + userExpCookie.maxAge), userExpCookie)
   ctx.status = 200
   ctx.body = { message: '登录成功' }
 })
 
 router.get('/logout', (ctx) => {
-  ctx.cookies.set('user_token')
-  ctx.cookies.set('user_exp')
+  ctx.cookies.set('user_token', null, userTokenCookie)
   ctx.status = 200
 })
 
