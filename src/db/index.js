@@ -66,9 +66,19 @@ const FriendSchema = new Schema(
   option
 )
 
+const BookSchema = new Schema({
+  isbn: String,
+  title: String,
+  abstract: String,
+  coverUrl: String,
+  url: String,
+  isRead: Boolean,
+})
+
 const User = mongoose.model('User', UserSchema)
 const Message = mongoose.model('Message', MessageSchema)
 const Reply = mongoose.model('Reply', ReplySchema)
 const Friend = mongoose.model('Friend', FriendSchema)
+const Book = mongoose.model('Book', BookSchema)
 
-module.exports = { User, Message, Reply, Friend }
+module.exports = { User, Message, Reply, Friend, Book }
