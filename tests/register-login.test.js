@@ -10,7 +10,9 @@ describe('注册[POST /register]', () => {
   })
 
   it('成功注册', async () => {
-    const res = await request.post('/register').send({ mail: 't', name: 't', pass: 't' })
+    const res = await request
+      .post('/register')
+      .send({ register: { mail: 't', name: 't', pass: 't' } })
     const user = await User.findOne({ mail: 't' }).exec()
     assert.notEqual(user.salt, 't')
     assert.notEqual(user.pass, 't')
@@ -20,7 +22,7 @@ describe('注册[POST /register]', () => {
   })
 
   it('用户已存在', async () => {
-    const res = await request.post('/register').send({ mail: 't' })
+    const res = await request.post('/register').send({ register: { mail: 't' } })
     assert.equal(res.status, 400)
     assert.equal(res.text, '用户已存在')
   })

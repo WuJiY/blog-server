@@ -9,4 +9,4 @@ const httpsOpts = {
   cert: readFileSync(join(__dirname, '../assets/api.apasser.xyz.crt')),
 }
 
-https.createServer(httpsOpts, app).listen(3000)
+https.createServer(httpsOpts, app).listen(3000, () => console.log('Service started'))
