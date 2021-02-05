@@ -26,8 +26,15 @@ router.post('/', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
   if (ctx.state.user.role !== 'admin') {
     ctx.throw(403)
   }
-  const books = ctx.request.body
-  await Book.create([...books.read, ...books.unread])
+  const { newBooks, modified } = ctx.request.body
+  const op = []
+  for (let i = 0; i < modified.update.length; i++) {
+    op.push(Book.findByIdAndUpdate(modified.update[i], { isRead: true }).exec())
+  }
+  for (let i = 0; i < modified.delete.length; i++) {
+    op.push(Book.findByIdAndDelete(modified.delete[i]).exec())
+  }
+  await Promise.all([Book.create([...newBooks.read, ...newBooks.unread]), ...op])
   ctx.status = 200
 })
 
