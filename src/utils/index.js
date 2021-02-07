@@ -6,19 +6,50 @@ const jwt = require('jsonwebtoken')
 const chunk = require('lodash/chunk')
 const auth = require('../../assets/auth.json')
 
-const errorlogout = createWriteStream(join(__dirname, '../../server.log'), { flags: 'a' })
-const logger = new console.Console(process.stdout, errorlogout)
+function createServerLogger() {
+  const serverStatsWS = createWriteStream(join(__dirname, '../../server-stats.log'), { flags: 'a' })
+  const serverErrorWS = createWriteStream(join(__dirname, '../../server-error.log'), { flags: 'a' })
+  const serverLogger = new console.Console(serverStatsWS, serverErrorWS)
+  serverLogger.log = serverLogger.log.bind(
+    null,
+    new Date().toLocaleString('zh-Hans-CN', { hourCycle: 'h23' })
+  )
+  serverLogger.error = serverLogger.error.bind(
+    null,
+    new Date().toLocaleString('zh-Hans-CN', { hourCycle: 'h23' })
+  )
+  return serverLogger
+}
+
+function createClientLogger() {
+  const clientStatsWS = createWriteStream(join(__dirname, '../../client-stats.log'), { flags: 'a' })
+  const clientErrorWS = createWriteStream(join(__dirname, '../../client-error.log'), { flags: 'a' })
+  const clientLogger = new console.Console(clientStatsWS, clientErrorWS)
+  clientLogger.log = clientLogger.log.bind(
+    null,
+    new Date().toLocaleString('zh-Hans-CN', { hourCycle: 'h23' })
+  )
+  clientLogger.error = clientLogger.error.bind(
+    null,
+    new Date().toLocaleString('zh-Hans-CN', { hourCycle: 'h23' })
+  )
+  return clientLogger
+}
 
 const constans = {
-  //       7 days
-  MAX_AGE: 604800000,
+  A_WEEK: 604800000,
+  TEN_YEAR: 31536000000,
   PUBLIC_KEY: readFileSync(join(__dirname, '../../assets/public.pem')),
   PRIVATE_KEY: readFileSync(join(__dirname, '../../assets/private.pem')),
 }
 
 const config = {
-  userTokenCookie: {
-    maxAge: constans.MAX_AGE,
+  USER_TOKEN_COOKIE: {
+    maxAge: constans.A_WEEK,
+    sameSite: 'none',
+  },
+  CLIENT_STATS_COOKIE: {
+    maxAge: constans.TEN_YEAR,
     sameSite: 'none',
   },
   origin: process.env.NODE_ENV === 'production' ? 'https://apasser.xyz' : undefined,
@@ -38,7 +69,8 @@ async function connectDb() {
       autoIndex: false,
       useFindAndModify: false,
     })
-  } catch (e) {
+  } catch (err) {
+    console.error(err)
     process.exit(1)
   }
 }
@@ -69,25 +101,13 @@ async function verifyPassword(pass, salt) {
  * @param {object} payload 负载对象
  * @param {number} expiresIn 默认7天，单位毫秒
  */
-function signToken(payload, expiresIn = constans.MAX_AGE) {
+function signToken(payload, expiresIn = constans.A_WEEK) {
   const token = jwt.sign({ iat: Date.now(), ...payload }, constans.PRIVATE_KEY, {
     expiresIn,
     algorithm: 'RS256',
     noTimestamp: true,
   })
   return token
-}
-
-/**
- * 用于koa-jwt选项
- * @param {object} ctx
- */
-function getToken(ctx) {
-  const userToken = ctx.cookies.get('user_token')
-  if (!userToken) {
-    return null
-  }
-  return userToken
 }
 
 /**
@@ -142,12 +162,12 @@ function pageAll(arr, limit = '10') {
 module.exports = {
   constans,
   config,
-  logger,
+  serverLogger: createServerLogger(),
+  clientLogger: createClientLogger(),
   connectDb,
   hashPassword,
   verifyPassword,
   signToken,
-  getToken,
   sortByKeyOrder,
   pageOne,
   pageAll,

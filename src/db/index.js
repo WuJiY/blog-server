@@ -66,14 +66,17 @@ const FriendSchema = new Schema(
   option
 )
 
-const BookSchema = new Schema({
-  isbn: String,
-  title: String,
-  abstract: String,
-  coverUrl: String,
-  url: String,
-  isRead: Boolean,
-})
+const BookSchema = new Schema(
+  {
+    isbn: String,
+    title: String,
+    abstract: String,
+    coverUrl: String,
+    url: String,
+    isRead: Boolean,
+  },
+  option
+)
 
 const User = mongoose.model('User', UserSchema)
 const Message = mongoose.model('Message', MessageSchema)

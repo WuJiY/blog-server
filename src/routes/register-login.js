@@ -5,7 +5,7 @@ const {
   hashPassword,
   verifyPassword,
   signToken,
-  config: { userTokenCookie },
+  config: { USER_TOKEN_COOKIE },
 } = require('../utils')
 const tencentCert = require('../../assets/tencent-credential.json')
 
@@ -48,7 +48,7 @@ router.post(
     const user = await User.create({ mail, name, salt: hashed.salt, pass: hashed.pass })
     //                        改为字符串版本
     const token = signToken({ id: user.id, role: user.role })
-    ctx.cookies.set('user_token', token, userTokenCookie)
+    ctx.cookies.set('user_token', token, USER_TOKEN_COOKIE)
     ctx.status = 200
     ctx.body = { message: '注册成功' }
   }
@@ -65,13 +65,13 @@ router.post('/login', async (ctx) => {
     ctx.throw(400, '密码错误')
   }
   const token = signToken({ id: user._id, role: user.role })
-  ctx.cookies.set('user_token', token, userTokenCookie)
+  ctx.cookies.set('user_token', token, USER_TOKEN_COOKIE)
   ctx.status = 200
   ctx.body = { message: '登录成功' }
 })
 
 router.get('/logout', (ctx) => {
-  ctx.cookies.set('user_token', null, userTokenCookie)
+  ctx.cookies.set('user_token', null, USER_TOKEN_COOKIE)
   ctx.status = 200
 })
 

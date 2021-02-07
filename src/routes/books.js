@@ -1,10 +1,7 @@
 const Router = require('@koa/router')
 const Koajwt = require('koa-jwt')
 const { Book } = require('../db')
-const {
-  getToken,
-  constans: { PUBLIC_KEY },
-} = require('../utils')
+const { PUBLIC_KEY } = require('../utils').constans
 
 const router = new Router({ prefix: '/books' })
 
@@ -22,7 +19,7 @@ router.get('/', async (ctx) => {
   ctx.body = { read, unread }
 })
 
-router.post('/', Koajwt({ getToken, secret: PUBLIC_KEY }), async (ctx) => {
+router.post('/', Koajwt({ cookie: 'user_token', secret: PUBLIC_KEY }), async (ctx) => {
   if (ctx.state.user.role !== 'admin') {
     ctx.throw(403)
   }

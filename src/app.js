@@ -6,9 +6,9 @@ const Logger = require('koa-logger')
 const router = require('./routes')
 const {
   connectDb,
-  constans: { MAX_AGE },
+  constans: { A_WEEK },
   config: { origin },
-  logger,
+  serverLogger,
 } = require('./utils')
 
 connectDb()
@@ -19,23 +19,19 @@ app.use(Helmet())
 if (process.env.NODE_ENV === 'development') {
   app.use(Logger())
 }
-app.use(Cors({ credentials: true, origin, maxAge: MAX_AGE / 1000 }))
+app.use(Cors({ credentials: true, origin, maxAge: A_WEEK / 1000 }))
 app.use(BodyParser({ enableTypes: ['json'] }))
 
 app.use(async (ctx, next) => {
   try {
     await next()
   } catch (err) {
-    if (!err.expose) {
-      logger.error(new Date().toLocaleString('zh-CN', { hour12: false }), err)
-    }
-    if (err.status === 401) {
-      err.message = '用户认证失败，请重新登录'
-    } else if (err.status === 500) {
-      err.message = '服务器错误'
-    }
     ctx.status = err.statusCode || err.status || 500
-    throw err
+    if (err.expose) {
+      throw err
+    } else {
+      serverLogger.error(err)
+    }
   }
 })
 
