@@ -6,7 +6,7 @@ const router = new Router({ prefix: '/friends' })
 
 router.get('/', async (ctx) => {
   const { page, limit } = ctx.query
-  const friens = await Friend.find({}).lean().exec()
+  const friens = await Friend.find({}, 'name avatar desc link').lean().exec()
   ctx.body = pageOne(friens, page, limit)
 })
 
