@@ -39,10 +39,9 @@ describe('用户操作[GET /user]', () => {
     assert.equal(res.status, 200)
   })
 
-  it('token验证失败时应该抛出指定的错误', async () => {
+  it('token验证失败', async () => {
     const res = await request.get('/user/auth')
     assert.equal(res.status, 401)
-    assert.equal(res.text, '用户认证失败，请重新登录')
   })
 
   it('token快到期时自动续期', async () => {
