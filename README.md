@@ -4,7 +4,9 @@
 
 > 基于[koa2](https://github.com/koajs/koa)和[mongoose](https://github.com/Automattic/mongoose), 部署于腾讯云
 
-## 安装
+## 使用
+
+> yarn 版本为 2.x，且使用 pnp
 
 ---
 
@@ -23,4 +25,4 @@ yarn start
 
 > 博客 <https://apasser.xyz>
 
-> 前端Repo <https://github.com/zerowong/zerowong.github.io>
+> 前端 Repo <https://github.com/zerowong/zerowong.github.io>
