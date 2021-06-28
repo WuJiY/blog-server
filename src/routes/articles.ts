@@ -10,7 +10,7 @@ const router = new Router()
 router.get('/articles', async (ctx) => {
   const sortQS = [ctx.query.sort, ctx.query.order]
   const pageQS = [ctx.query.page, ctx.query.limit]
-  const articles = await Article.find({}).lean().select('-content -comments').exec()
+  const articles = await Article.find({}).lean().exec()
   if (isStringArray(sortQS)) {
     sortQuery(articles, sortQS[0], sortQS[1] === 'asc' ? 'asc' : 'desc')
   }
@@ -21,8 +21,8 @@ router.get('/articles', async (ctx) => {
   }
 })
 
-router.get('/article', async (ctx) => {
-  const { id } = ctx.request.body
+router.get('/article/:id', async (ctx) => {
+  const { id } = ctx.params
   const article = await Article.findById(id)
     .lean()
     .populate({
@@ -65,25 +65,24 @@ router.post('/article', UserTokenAuth, AdminAuth, async (ctx) => {
   ctx.body = { message: successText.ADD_ARTICLE_SUCCESS }
 })
 
-// TODO: 无法删除
-router.delete('/article', UserTokenAuth, AdminAuth, async (ctx) => {
-  const { id } = ctx.request.body
-  const result = await Article.deleteOne({ id }).exec()
-  console.log(result)
+router.delete('/article/:id', UserTokenAuth, AdminAuth, async (ctx) => {
+  const { id } = ctx.params
+  await Article.findByIdAndDelete(id).exec()
   ctx.status = 200
   ctx.body = { message: successText.DELETE_ARTICLE_SUCCESS }
 })
 
-router.patch('/article', UserTokenAuth, AdminAuth, async (ctx) => {
-  const { id, ...otherProps } = ctx.request.body
-  const needChanges: Record<string, unknown> = {}
-  Object.entries(otherProps).forEach(([key, val]) => {
-    if (val) {
-      needChanges[key] = val
-    }
-  })
+router.patch('/article/:id', UserTokenAuth, AdminAuth, async (ctx) => {
+  const { id } = ctx.params
   const article = await Article.findById(id).exec()
   if (article) {
+    const body = ctx.request.body
+    const needChanges: Record<string, unknown> = {}
+    Object.entries(body).forEach(([key, val]) => {
+      if (val) {
+        needChanges[key] = val
+      }
+    })
     await article.update({ ...needChanges }).exec()
     ctx.status = 200
     ctx.body = { message: successText.UPDATE_ARTICLE_SUCCESS }
