@@ -35,8 +35,11 @@ const serverOption = {
   cert: fs.readFileSync(SERVER_CRT_PATH),
 }
 
+const serverPort = process.env.NODE_ENV === 'dev' ? 3000 : 3001
+const wsPort = process.env.NODE_ENV === 'dev' ? 4000 : 4001
+
 http2
   .createSecureServer(serverOption, app.callback())
-  .listen(3000, () => console.log('[Server] Server running at https://localhost:3000'))
+  .listen(serverPort, () => console.log('[Server] Server running at https://localhost:3000'))
 
-initWebSocketServer(https.createServer(serverOption).listen(3001))
+initWebSocketServer(https.createServer(serverOption).listen(wsPort))
