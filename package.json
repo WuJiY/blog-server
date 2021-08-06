@@ -10,7 +10,7 @@
     "test": "cross-env NODE_ENV=test mocha -r ts-node/register --extensions ts 'tests/**/*.ts'",
     "build": "tsc",
     "start": "cross-env NODE_ENV=prod pm2 start --name api.apasser.xyz ./dist/src/app.js",
-    "start-dev": "cross-env NODE_ENV=dev pm2 start --name api.apasser.xyz/dev ./src/app.ts"
+    "start-dev": "cross-env NODE_ENV=dev pm2 start --name api.apasser.xyz/dev .dist/src/app.js"
   },
   "dependencies": {
     "@koa/cors": "^3.1.0",
