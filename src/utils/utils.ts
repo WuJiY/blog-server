@@ -10,7 +10,20 @@ import { PRIVATE_KEY_PATH, PUBLIC_KEY_PATH } from './config'
  * 连接数据库，失败则退出进程
  */
 export async function connectDb() {
-  const dbName = process.env.NODE_ENV === 'test' ? 'blog-test' : 'blog'
+  let dbName = 'blog-dev'
+  switch (process.env.NODE_ENV) {
+    case 'dev':
+      dbName = 'blog-dev'
+      break
+    case 'prod':
+      dbName = 'blog'
+      break
+    case 'test':
+      dbName = 'blog-test'
+      break
+    default:
+      dbName = 'blog-dev'
+  }
   try {
     await mongoose.connect(`mongodb://localhost/${dbName}`, {
       user: DB_AUTH.user,
