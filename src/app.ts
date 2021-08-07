@@ -1,45 +1,81 @@
 import http2 from 'http2'
-import https from 'https'
 import fs from 'fs'
 import Koa from 'koa'
 import Helmet from 'koa-helmet'
 import Cors from '@koa/cors'
 import BodyParser from 'koa-bodyparser'
 import Logger from 'koa-logger'
+import mongoose from 'mongoose'
 import router from './routes'
-import { connectDb, CORS_ORIGIN, A_WEEK, SERVER_KEY_PATH, SERVER_CRT_PATH } from './utils'
+import { CORS_ORIGIN, A_WEEK, SERVER_KEY_PATH, SERVER_CRT_PATH, dbConfig } from './utils'
 import ErrorHanlder from './middlewares/error-handler'
-import initWebSocketServer from './websocket'
 
-connectDb()
-
-const app = new Koa()
-
-app.use(Helmet())
-
-if (process.env.NODE_ENV === 'dev') {
-  app.use(Logger())
+/**
+ * 连接数据库
+ */
+async function connectDb() {
+  const dbNameMap: Record<string, string> = {
+    prod: 'blog',
+    dev: 'blog-dev',
+    test: 'blog-test'
+  }
+  const dbName = dbNameMap[process.env.NODE_ENV ?? 'prod']
+  const dbPath = `mongodb://${dbConfig.ip}/${dbName}`
+  await mongoose.connect(dbPath, {
+    user: dbConfig.user,
+    pass: dbConfig.pass,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    autoIndex: false,
+    useFindAndModify: false
+  })
+  console.log(`[mongodb] ${dbPath} connect successfully`)
 }
 
-app.use(Cors({ credentials: true, origin: CORS_ORIGIN, maxAge: A_WEEK / 1000 }))
+/**
+ * 启动服务
+ */
+function startServer() {
+  return new Promise<void>((resolve, reject) => {
+    try {
+      const app = new Koa()
 
-app.use(BodyParser({ enableTypes: ['json'] }))
+      app.use(Helmet())
 
-app.use(ErrorHanlder())
+      app.use(Logger())
 
-app.use(router.routes())
-app.use(router.allowedMethods())
+      app.use(Cors({ credentials: true, origin: CORS_ORIGIN, maxAge: A_WEEK / 1000 }))
 
-const serverOption = {
-  key: fs.readFileSync(SERVER_KEY_PATH),
-  cert: fs.readFileSync(SERVER_CRT_PATH),
+      app.use(BodyParser({ enableTypes: ['json'] }))
+
+      app.use(ErrorHanlder())
+
+      app.use(router.routes())
+      app.use(router.allowedMethods())
+
+      const serverOption = {
+        key: fs.readFileSync(SERVER_KEY_PATH),
+        cert: fs.readFileSync(SERVER_CRT_PATH)
+      }
+
+      const server = http2.createSecureServer(serverOption, app.callback())
+
+      server.listen(process.env.PORT)
+      console.log(`[config] NODE_ENV: ${process.env.NODE_ENV} PORT: ${process.env.PORT}`)
+      console.log(`[server] server running at https://localhost:${process.env.PORT}`)
+
+      return resolve()
+    } catch (err) {
+      return reject(err)
+    }
+  })
 }
 
-const serverPort = process.env.NODE_ENV === 'dev' ? 3000 : 3001
-const wsPort = process.env.NODE_ENV === 'dev' ? 4000 : 4001
-
-http2
-  .createSecureServer(serverOption, app.callback())
-  .listen(serverPort, () => console.log('[Server] Server running at https://localhost:3000'))
-
-initWebSocketServer(https.createServer(serverOption).listen(wsPort))
+Promise.all([connectDb(), startServer()]).then(
+  () => {
+    return process.send?.('ready')
+  },
+  () => {
+    return process.exit(1)
+  }
+)

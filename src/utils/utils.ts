@@ -1,43 +1,8 @@
-import fsp from 'fs/promises'
 import fs from 'fs'
-import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { PRIVATE_KEY_PATH, PUBLIC_KEY_PATH, dbConfig } from './config'
-
-/**
- * 连接数据库，失败则退出进程
- */
-export async function connectDb() {
-  let dbName = 'blog-dev'
-  switch (process.env.NODE_ENV) {
-    case 'dev':
-      dbName = 'blog-dev'
-      break
-    case 'prod':
-      dbName = 'blog'
-      break
-    case 'test':
-      dbName = 'blog-test'
-      break
-    default:
-      dbName = 'blog-dev'
-  }
-  try {
-    await mongoose.connect(`mongodb://${dbConfig.ip}/${dbName}`, {
-      user: dbConfig.user,
-      pass: dbConfig.pass,
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      autoIndex: false,
-      useFindAndModify: false,
-    })
-    console.log(`[Db] mongodb connect successfully`)
-  } catch (err) {
-    process.exitCode = 1
-    throw err
-  }
-}
+import type { JwtPayload } from 'jsonwebtoken'
+import { PRIVATE_KEY_PATH, PUBLIC_KEY_PATH } from './config'
 
 /**
  * 文本加密
@@ -56,18 +21,36 @@ export async function verify(data: string, hash: string) {
   return result
 }
 
-export async function signToken(payload: object, expiresIn = '7d') {
-  const privateKey = await fsp.readFile(PRIVATE_KEY_PATH)
-  const token = jwt.sign({ iat: Date.now(), ...payload }, privateKey, {
-    algorithm: 'RS256',
-    expiresIn,
-    noTimestamp: true,
+/**
+ * token签发
+ * @param expiresIn 默认7天
+ */
+export function signToken(payload: object, expiresIn = '7d') {
+  return new Promise<string>((resolve, reject) => {
+    fs.readFile(PRIVATE_KEY_PATH, (err, key) => {
+      if (err) {
+        return reject(err)
+      }
+      jwt.sign(
+        { iat: Date.now(), ...payload },
+        key,
+        { algorithm: 'RS256', expiresIn, noTimestamp: true },
+        (err, token) => {
+          if (err || !token) {
+            return reject(err)
+          }
+          return resolve(token)
+        }
+      )
+    })
   })
-  return token
 }
 
+/**
+ * token验证
+ */
 export function verifyToken(token: string) {
-  return new Promise((resolve, reject) => {
+  return new Promise<JwtPayload>((resolve, reject) => {
     fs.readFile(PUBLIC_KEY_PATH, (err, key) => {
       if (err) {
         return reject(err)
@@ -76,16 +59,16 @@ export function verifyToken(token: string) {
         if (err || !decoded) {
           return reject(err)
         }
-        resolve(decoded)
+        return resolve(decoded)
       })
     })
   })
 }
 
-export function getToken(name: string, cookie: string | undefined) {
-  if (!cookie) {
-    return null
-  }
+/**
+ * 从cookie中取值
+ */
+export function getCookieValue(name: string, cookie: string) {
   for (let i = 0, cookies = cookie.split(';'); i < cookies.length; i++) {
     const [key, value] = cookies[i].split('=')
     if (key === name) {

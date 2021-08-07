@@ -1,5 +1,4 @@
 import type { ParameterizedContext, Next } from 'koa'
-import { createLogger } from '../utils'
 
 // https://github.com/jshttp/http-errors
 interface HttpError {
@@ -12,7 +11,6 @@ interface HttpError {
 }
 
 export default function ErrorHanlder() {
-  const serverErrorLogger = createLogger('server_error')
   return async (ctx: ParameterizedContext, next: Next) => {
     try {
       await next()
@@ -22,7 +20,7 @@ export default function ErrorHanlder() {
       if (expose) {
         throw err
       }
-      serverErrorLogger.error(err)
+      console.error(err)
     }
   }
 }

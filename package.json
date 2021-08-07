@@ -6,11 +6,11 @@
   "license": "MIT",
   "author": "ApassEr <wongzero@foxmail.com>",
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev ts-node-dev -T  ./src/app.ts",
+    "dev": "cross-env NODE_ENV=dev ts-node-dev -T ./src/app.ts",
     "test": "cross-env NODE_ENV=test mocha -r ts-node/register --extensions ts 'tests/**/*.ts'",
     "build": "tsc",
-    "start": "cross-env NODE_ENV=prod pm2 start --name api.apasser.xyz ./dist/app.js",
-    "start-dev": "cross-env NODE_ENV=dev pm2 start --name api.apasser.xyz/dev ./dist/app.js"
+    "start:all": "pm2 start ecosystem.config.js",
+    "start:dev": "pm2 start ecosystem.config.js --only blog-api-dev"
   },
   "dependencies": {
     "@koa/cors": "^3.1.0",

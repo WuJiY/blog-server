@@ -10,7 +10,8 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "removeComments": true,
-    "listEmittedFiles": true
+    "listEmittedFiles": true,
+    "baseUrl": "./"
   },
   "include": ["src"]
 }

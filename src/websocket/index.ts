@@ -2,7 +2,7 @@ import type { Server } from 'https'
 import type { IncomingMessage } from 'http'
 import type { Socket } from 'net'
 import WS from 'ws'
-import { createLogger, getToken, verifyToken } from '../utils'
+import { createLogger, getCookieValue, verifyToken } from '../utils'
 import type { Logger } from '../utils'
 import { User } from '../db'
 
@@ -20,10 +20,12 @@ class WSSWrapper {
     this.logger = createLogger('ws_server_error')
 
     server.on('upgrade', (request: IncomingMessage, socket: Socket, head: Buffer) => {
-      const token = getToken('user_token', request.headers.cookie)
+      if (!request.headers.cookie) {
+        return socket.destroy()
+      }
+      const token = getCookieValue('user_token', request.headers.cookie)
       if (!token) {
-        socket.destroy()
-        return
+        return socket.destroy()
       }
       verifyToken(token).then(
         (decoded) => {

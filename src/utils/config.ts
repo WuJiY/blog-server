@@ -12,7 +12,7 @@ export const A_DAY = 86400000
 
 export const USER_TOKEN_OPTION = {
   maxAge: A_WEEK,
-  sameSite: <'none'>'none',
+  sameSite: <'none'>'none'
 }
 
 export const CORS_ORIGIN = process.env.NODE_ENV === 'prod' ? 'https://apasser.xyz' : undefined
