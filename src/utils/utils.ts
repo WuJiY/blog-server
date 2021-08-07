@@ -3,8 +3,7 @@ import fs from 'fs'
 import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import DB_AUTH from '../../assets/auth.json'
-import { PRIVATE_KEY_PATH, PUBLIC_KEY_PATH } from './config'
+import { PRIVATE_KEY_PATH, PUBLIC_KEY_PATH, dbConfig } from './config'
 
 /**
  * 连接数据库，失败则退出进程
@@ -25,9 +24,9 @@ export async function connectDb() {
       dbName = 'blog-dev'
   }
   try {
-    await mongoose.connect(`mongodb://localhost/${dbName}`, {
-      user: DB_AUTH.user,
-      pass: DB_AUTH.pass,
+    await mongoose.connect(`mongodb://${dbConfig.ip}/${dbName}`, {
+      user: dbConfig.user,
+      pass: dbConfig.pass,
       useNewUrlParser: true,
       useUnifiedTopology: true,
       autoIndex: false,

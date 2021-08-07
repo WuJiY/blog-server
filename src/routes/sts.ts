@@ -1,16 +1,15 @@
-/**
- * 临时密钥服务
- */
-
 import Router from '@koa/router'
 import STS from 'qcloud-cos-sts'
 import UserTokenAuth from '../middlewares/user-token-auth'
 import AdminAuth from '../middlewares/admin-auth'
-import TENCENT_CERT from '../../assets/tencent-credential.json'
-import { errorText } from '../utils/status_text'
+import { errorText } from '../utils/status-text'
+import { tencentCret } from '../utils/config'
 
 const router = new Router()
 
+/**
+ * 临时密钥服务
+ */
 router.get('/sts', UserTokenAuth, AdminAuth, async (ctx) => {
   // prefix = dir/name.ext
   // const { prefix } = ctx.request.body
@@ -24,8 +23,8 @@ router.get('/sts', UserTokenAuth, AdminAuth, async (ctx) => {
   ])
   try {
     const tempCred = await STS.getCredential({
-      secretId: TENCENT_CERT.credential.secretId,
-      secretKey: TENCENT_CERT.credential.secretKey,
+      secretId: tencentCret.credential.secretId,
+      secretKey: tencentCret.credential.secretKey,
       policy,
     })
     ctx.status = 200

@@ -1,7 +1,7 @@
 import Router from '@koa/router'
 import { User } from '../db'
-import { signToken, hash, verify, USER_TOKEN_COOKIE, A_DAY } from '../utils'
-import { errorText, successText } from '../utils/status_text'
+import { signToken, hash, verify, USER_TOKEN_OPTION, A_DAY } from '../utils'
+import { errorText, successText } from '../utils/status-text'
 import Captcha from '../middlewares/captcha'
 import UserTokenAuth from '../middlewares/user-token-auth'
 
@@ -18,7 +18,7 @@ router.post('/register', async (ctx) => {
   const hashedPass = await hash(pass)
   const user = await User.create({ mail, name, pass: hashedPass })
   const token = await signToken({ id: user._id, role: user.role })
-  ctx.cookies.set('user_token', token, USER_TOKEN_COOKIE)
+  ctx.cookies.set('user_token', token, USER_TOKEN_OPTION)
   ctx.status = 200
   ctx.body = { message: successText.REGISTER_SUCCESS }
 })
@@ -32,7 +32,7 @@ router.post('/login', async (ctx) => {
       ctx.throw(401, errorText.PASS_INVALID)
     }
     const token = await signToken({ id: user._id, role: user.role })
-    ctx.cookies.set('user_token', token, USER_TOKEN_COOKIE)
+    ctx.cookies.set('user_token', token, USER_TOKEN_OPTION)
     ctx.status = 200
     ctx.body = { message: successText.LOGIN_SUCCESS }
   } else {
@@ -41,7 +41,7 @@ router.post('/login', async (ctx) => {
 })
 
 router.get('/logout', (ctx) => {
-  ctx.cookies.set('user_token', null, USER_TOKEN_COOKIE)
+  ctx.cookies.set('user_token', null, USER_TOKEN_OPTION)
   ctx.status = 200
   ctx.body = { message: successText.LOGOUT_SUCCESS }
 })
@@ -51,7 +51,7 @@ router.get('/auth', UserTokenAuth, async (ctx) => {
   const user = await User.findById(id).lean().select('name mail avatar createdAt role').exec()
   if (Date.now() - exp < A_DAY) {
     const token = await signToken({ id, role })
-    ctx.cookies.set('user_token', token, USER_TOKEN_COOKIE)
+    ctx.cookies.set('user_token', token, USER_TOKEN_OPTION)
   }
   ctx.status = 200
   ctx.body = user

@@ -1,5 +1,5 @@
 import type { ParameterizedContext, Next } from 'koa'
-import { errorText } from '../utils/status_text'
+import { errorText } from '../utils/status-text'
 
 export default function BodyValidate() {
   return (ctx: ParameterizedContext, next: Next) => {

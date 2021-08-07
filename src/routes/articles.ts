@@ -1,7 +1,7 @@
 import Router from '@koa/router'
 import { Article } from '../db'
 import { sortQuery, pageQuery, isStringArray } from '../utils'
-import { errorText, successText } from '../utils/status_text'
+import { errorText, successText } from '../utils/status-text'
 import UserTokenAuth from '../middlewares/user-token-auth'
 import AdminAuth from '../middlewares/admin-auth'
 
