@@ -20,16 +20,20 @@ async function connectDb() {
     test: 'blog-test'
   }
   const dbName = dbNameMap[process.env.NODE_ENV ?? 'prod']
-  const dbPath = `mongodb://${dbConfig.ip}/${dbName}`
-  await mongoose.connect(dbPath, {
-    user: dbConfig.user,
-    pass: dbConfig.pass,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    autoIndex: false,
-    useFindAndModify: false
-  })
-  console.log(`[mongodb] ${dbPath} connect successfully`)
+  const dbPath = `mongodb://localhost/${dbName}`
+  try {
+    await mongoose.connect(dbPath, {
+      user: dbConfig.user,
+      pass: dbConfig.pass,
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      autoIndex: false,
+      useFindAndModify: false
+    })
+    console.log(`[mongodb] ${dbPath} connect successfully`)
+  } catch (err) {
+    throw err
+  }
 }
 
 /**
@@ -75,7 +79,8 @@ Promise.all([connectDb(), startServer()]).then(
   () => {
     return process.send?.('ready')
   },
-  () => {
+  (err) => {
+    console.error(err)
     return process.exit(1)
   }
 )
