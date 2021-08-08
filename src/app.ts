@@ -1,4 +1,5 @@
 import http2 from 'http2'
+import type { SecureServerOptions } from 'http2'
 import fs from 'fs'
 import Koa from 'koa'
 import Helmet from 'koa-helmet'
@@ -57,9 +58,10 @@ function startServer() {
       app.use(router.routes())
       app.use(router.allowedMethods())
 
-      const serverOption = {
+      const serverOption: SecureServerOptions = {
         key: fs.readFileSync(SERVER_KEY_PATH),
-        cert: fs.readFileSync(SERVER_CRT_PATH)
+        cert: fs.readFileSync(SERVER_CRT_PATH),
+        allowHTTP1: true
       }
 
       const server = http2.createSecureServer(serverOption, app.callback())
